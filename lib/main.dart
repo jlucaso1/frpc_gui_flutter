@@ -1,10 +1,13 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide MenuItem;
 import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tray_manager/tray_manager.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const MyApp());
 
   doWhenWindowReady(() {
@@ -20,15 +23,70 @@ void main() {
   });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with TrayListener {
+  var frpcProvider = FrpcProvider();
+  final _menu = Menu(items: [
+    MenuItem(
+      key: 'exit_app',
+      label: 'Exit App',
+    ),
+  ]);
+
+  @override
+  void initState() {
+    trayManager.addListener(this);
+    super.initState();
+    _initTray();
+  }
+
+  void _initTray() async {
+    await trayManager.setIcon('assets/images/app_icon.ico');
+    await trayManager.setContextMenu(_menu);
+  }
+
+  @override
+  void dispose() {
+    trayManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    appWindow.restore();
+  }
+
+  @override
+  void onTrayIconMouseUp() {}
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayIconRightMouseUp() {}
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) {
+    if (menuItem.key == 'exit_app') {
+      appWindow.close();
+      frpcProvider.stop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<FrpcProvider>(
-          create: (_) => FrpcProvider(),
+          create: (_) => frpcProvider,
         ),
       ],
       builder: (context, _) => MaterialApp(
@@ -121,7 +179,7 @@ class _WindowButtonsState extends State<WindowButtons> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        MinimizeWindowButton(colors: buttonColors),
+        MinimizeWindowButton(colors: buttonColors, onPressed: appWindow.hide),
         // MaximizeWindowButton(colors: buttonColors),
         CloseWindowButton(
           colors: closeButtonColors,
@@ -245,12 +303,12 @@ class _MainWidgetState extends State<MainWidget> {
             ),
           ),
           // put button to the bottom
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           Consumer<FrpcProvider>(builder: (context, provider, child) {
             var isRunning = provider.isRunning;
             return ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(90, 40),
+                  fixedSize: const Size(70, 30),
                   primary: isRunning ? Colors.red : Colors.green),
               onPressed: provider.isRunning
                   ? () => _frpcProvider.stop()
