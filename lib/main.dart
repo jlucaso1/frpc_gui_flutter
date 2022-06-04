@@ -1,3 +1,4 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
+
+  doWhenWindowReady(() {
+    final win = appWindow;
+    const initialSize = Size(640, 360);
+    const minSize = Size(640, 360);
+    win.minSize = minSize;
+    win.maxSize = minSize;
+    win.size = initialSize;
+    win.alignment = Alignment.center;
+    win.title = "Frpc GUI";
+    win.show();
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -24,30 +37,120 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.deepPurple,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: const MyHomePage(title: 'Frpc GUI'),
+        home: const MyHomePage(),
       ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+        child: WindowBorder(
+      color: Colors.deepPurple,
+      width: 1,
+      child: Column(
+        children: [
+          WindowTitleBarBox(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8, top: 4),
+                        child: Text(
+                          "Frpc GUI",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      MoveWindow(),
+                    ],
+                  ),
+                ),
+                const WindowButtons()
+              ],
+            ),
+          ),
+          const MainWidget(),
+        ],
+      ),
+    ));
+  }
+}
+
+final buttonColors = WindowButtonColors(
+    iconNormal: const Color(0xFF805306),
+    mouseOver: const Color(0xFFF6A00C),
+    mouseDown: const Color(0xFF805306),
+    iconMouseOver: const Color(0xFF805306),
+    iconMouseDown: const Color(0xFFFFD500));
+
+final closeButtonColors = WindowButtonColors(
+    mouseOver: const Color(0xFFD32F2F),
+    mouseDown: const Color(0xFFB71C1C),
+    iconNormal: const Color(0xFF805306),
+    iconMouseOver: Colors.white);
+
+class WindowButtons extends StatefulWidget {
+  const WindowButtons({Key? key}) : super(key: key);
+
+  @override
+  State<WindowButtons> createState() => _WindowButtonsState();
+}
+
+class _WindowButtonsState extends State<WindowButtons> {
   late FrpcProvider _frpcProvider;
 
+  @override
+  void initState() {
+    super.initState();
+    _frpcProvider = Provider.of<FrpcProvider>(context, listen: false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        MinimizeWindowButton(colors: buttonColors),
+        // MaximizeWindowButton(colors: buttonColors),
+        CloseWindowButton(
+          colors: closeButtonColors,
+          onPressed: () {
+            _frpcProvider.stop();
+            appWindow.close();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class MainWidget extends StatefulWidget {
+  const MainWidget({Key? key}) : super(key: key);
+
+  @override
+  State<MainWidget> createState() => _MainWidgetState();
+}
+
+class _MainWidgetState extends State<MainWidget> {
   final TextEditingController _serverAddressController =
       TextEditingController();
   final TextEditingController _serverPortController = TextEditingController();
   final TextEditingController _localPortController = TextEditingController();
   final TextEditingController _remotePortController = TextEditingController();
   String _selectedProtocol = 'tcp';
+
+  late FrpcProvider _frpcProvider;
 
   @override
   void initState() {
@@ -85,120 +188,85 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: FractionallySizedBox(
-          widthFactor: 0.9,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 40),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _serverAddressController,
-                            decoration: const InputDecoration(
-                              labelText: 'Server Address',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _serverPortController,
-                            decoration: const InputDecoration(
-                              labelText: 'Server Port',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _localPortController,
-                            decoration: const InputDecoration(
-                              labelText: 'Local Port',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _remotePortController,
-                            decoration: const InputDecoration(
-                              labelText: 'Remote Port',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    DropdownButton(
-                      value: _selectedProtocol,
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'tcp',
-                          child: Text('tcp'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'udp',
-                          child: Text('udp'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedProtocol = value.toString();
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    // make a toggle button
-                    Consumer<FrpcProvider>(builder: (context, provider, child) {
-                      return ElevatedButton(
-                        onPressed: provider.isRunning
-                            ? () => _frpcProvider.stop()
-                            : () => _frpcProvider.start(
-                                serverAddress: _serverAddressController.text,
-                                serverPort:
-                                    int.parse(_serverPortController.text),
-                                localPort: int.parse(_localPortController.text),
-                                remotePort:
-                                    int.parse(_remotePortController.text),
-                                protocol: _selectedProtocol,
-                                context: context),
-                        child: Text(
-                          provider.isRunning ? 'Stop' : 'Start',
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-              // footer
-              Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Created by: jlucaso',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _serverAddressController,
+            decoration: const InputDecoration(
+              labelText: 'Server address',
+            ),
           ),
-        ),
+          TextField(
+            controller: _serverPortController,
+            decoration: const InputDecoration(
+              labelText: 'Server port',
+            ),
+          ),
+          TextField(
+            controller: _localPortController,
+            decoration: const InputDecoration(
+              labelText: 'Local port',
+            ),
+          ),
+          TextField(
+            controller: _remotePortController,
+            decoration: const InputDecoration(
+              labelText: 'Remote port',
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                const Text('Protocol: '),
+                Radio<String>(
+                  value: 'tcp',
+                  groupValue: _selectedProtocol,
+                  onChanged: (protocol) {
+                    setState(() {
+                      _selectedProtocol = protocol!;
+                    });
+                  },
+                ),
+                const Text('TCP'),
+                Radio<String>(
+                  value: 'udp',
+                  groupValue: _selectedProtocol,
+                  onChanged: (protocol) {
+                    setState(() {
+                      _selectedProtocol = protocol!;
+                    });
+                  },
+                ),
+                const Text('UDP'),
+              ],
+            ),
+          ),
+          // put button to the bottom
+          const SizedBox(height: 20),
+          Consumer<FrpcProvider>(builder: (context, provider, child) {
+            var isRunning = provider.isRunning;
+            return ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  fixedSize: const Size(90, 40),
+                  primary: isRunning ? Colors.red : Colors.green),
+              onPressed: provider.isRunning
+                  ? () => _frpcProvider.stop()
+                  : () => _frpcProvider.start(
+                      serverAddress: _serverAddressController.text,
+                      serverPort: int.parse(_serverPortController.text),
+                      localPort: int.parse(_localPortController.text),
+                      remotePort: int.parse(_remotePortController.text),
+                      protocol: _selectedProtocol,
+                      context: context),
+              child: Text(
+                isRunning ? 'Stop' : 'Start',
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

@@ -28,10 +28,10 @@ class FrpcProvider extends ChangeNotifier {
       '$remotePort',
     ]);
     tempProcess.stdout.transform(utf8.decoder).listen((data) async {
-      debugPrint(data);
+      // debugPrint(data);
       if (data.contains('start proxy success')) {
         frpcProcess = tempProcess;
-        debugPrint('started frpc.exe process, pid: ${tempProcess.pid}');
+        // debugPrint('started frpc.exe process, pid: ${tempProcess.pid}');
         notifyListeners();
         final prefs = await SharedPreferences.getInstance();
 
@@ -42,7 +42,7 @@ class FrpcProvider extends ChangeNotifier {
         prefs.setString('protocol', protocol);
       }
       if (data.contains('port already used')) {
-        debugPrint('port already used');
+        // debugPrint('port already used');
         // kill current proccess
         tempProcess.kill();
         // show error dialog
@@ -75,7 +75,7 @@ class FrpcProvider extends ChangeNotifier {
 
   void stop() async {
     if (frpcProcess == null) return;
-    debugPrint('kill frpc.exe process, frpcProcess is ${frpcProcess?.pid}');
+    // debugPrint('kill frpc.exe process, frpcProcess is ${frpcProcess?.pid}');
     frpcProcess?.kill();
     frpcProcess = null;
     notifyListeners();
