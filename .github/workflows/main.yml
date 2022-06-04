@@ -10,7 +10,6 @@ jobs:
          cache: true
      - run: flutter config --enable-windows-desktop
      - run: flutter build windows
-     - name: Use the Upload Artifact GitHub Action
      - uses: actions/upload-artifact@v2
        with:
         name: assets-for-download
