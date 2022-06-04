@@ -49,6 +49,7 @@ class _MyAppState extends State<MyApp> with TrayListener {
   void _initTray() async {
     await trayManager.setIcon('assets/images/app_icon.ico');
     await trayManager.setContextMenu(_menu);
+    await trayManager.setToolTip('Frpc GUI');
   }
 
   @override
