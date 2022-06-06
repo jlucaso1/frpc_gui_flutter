@@ -1,5 +1,7 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart' hide MenuItem;
+import 'package:flutter/services.dart';
+import 'package:frpc_gui_flutter/models/config.dart';
 import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -278,33 +280,82 @@ class _MainWidgetState extends State<MainWidget> {
           Align(
             alignment: Alignment.centerLeft,
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Protocol: '),
-                Radio<String>(
-                  value: 'tcp',
-                  groupValue: _selectedProtocol,
-                  onChanged: (protocol) {
-                    setState(() {
-                      _selectedProtocol = protocol!;
-                    });
-                  },
+                Row(
+                  children: [
+                    const Text('Protocol: '),
+                    Radio<String>(
+                      value: 'tcp',
+                      groupValue: _selectedProtocol,
+                      onChanged: (protocol) {
+                        setState(() {
+                          _selectedProtocol = protocol!;
+                        });
+                      },
+                    ),
+                    const Text('TCP'),
+                    Radio<String>(
+                      value: 'udp',
+                      groupValue: _selectedProtocol,
+                      onChanged: (protocol) {
+                        setState(() {
+                          _selectedProtocol = protocol!;
+                        });
+                      },
+                    ),
+                    const Text('UDP'),
+                  ],
                 ),
-                const Text('TCP'),
-                Radio<String>(
-                  value: 'udp',
-                  groupValue: _selectedProtocol,
-                  onChanged: (protocol) {
-                    setState(() {
-                      _selectedProtocol = protocol!;
-                    });
-                  },
+                // two button copy and paste from clipboard
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          // create a FrpcConfig object
+                          final config = FrpcConfig(
+                            serverAddress: _serverAddressController.text,
+                            serverPort: int.parse(_serverPortController.text),
+                            localPort: int.parse(_localPortController.text),
+                            remotePort: int.parse(_remotePortController.text),
+                            protocol: _selectedProtocol,
+                          );
+
+                          _frpcProvider.copyToClipboard(config);
+                        },
+                        child: const Text('Copy from clipboard'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final config =
+                              await _frpcProvider.getConfigFromClipBoard();
+                          if (config != null) {
+                            _serverAddressController.text =
+                                config.serverAddress;
+                            _serverPortController.text =
+                                config.serverPort.toString();
+                            _localPortController.text =
+                                config.localPort.toString();
+                            _remotePortController.text =
+                                config.remotePort.toString();
+                            setState(() {
+                              _selectedProtocol = config.protocol;
+                            });
+                          }
+                        },
+                        child: const Text('Paste to clipboard'),
+                      ),
+                    ],
+                  ),
                 ),
-                const Text('UDP'),
               ],
             ),
           ),
           // put button to the bottom
-          const SizedBox(height: 30),
+          const SizedBox(height: 20),
           Consumer<FrpcProvider>(builder: (context, provider, child) {
             var isRunning = provider.isRunning;
             return ElevatedButton(

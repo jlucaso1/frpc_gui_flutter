@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:frpc_gui_flutter/models/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FrpcProvider extends ChangeNotifier {
@@ -75,9 +78,20 @@ class FrpcProvider extends ChangeNotifier {
 
   void stop() async {
     if (frpcProcess == null) return;
-    // debugPrint('kill frpc.exe process, frpcProcess is ${frpcProcess?.pid}');
     frpcProcess?.kill();
     frpcProcess = null;
     notifyListeners();
+  }
+
+  void copyToClipboard(FrpcConfig config) {
+    Clipboard.setData(ClipboardData(text: jsonEncode(config.toJson())));
+  }
+
+  Future<FrpcConfig?> getConfigFromClipBoard() async {
+    final data = await Clipboard.getData('text/plain');
+    if (data == null) return null;
+    final json = jsonDecode(data.text.toString());
+
+    return FrpcConfig.fromJson(json);
   }
 }
