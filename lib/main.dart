@@ -1,6 +1,5 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart' hide MenuItem;
-import 'package:flutter/services.dart';
 import 'package:frpc_gui_flutter/models/config.dart';
 import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
 import 'package:provider/provider.dart';
@@ -8,8 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   runApp(const MyApp());
 
   doWhenWindowReady(() {
@@ -99,6 +96,13 @@ class _MyAppState extends State<MyApp> with TrayListener {
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         home: const MyHomePage(),
+        debugShowCheckedModeBanner: false,
+        // dark theme with deep purple primary color
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          primarySwatch: Colors.deepPurple,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
       ),
     );
   }
@@ -111,7 +115,33 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      debugPrint("App resumed");
+    }
+    if (state == AppLifecycleState.paused) {
+      debugPrint("App paused");
+    }
+    if (state == AppLifecycleState.inactive) {
+      debugPrint("App inactive");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -293,6 +323,9 @@ class _MainWidgetState extends State<MainWidget> {
                           _selectedProtocol = protocol!;
                         });
                       },
+                      fillColor: MaterialStateProperty.all<Color>(
+                        Colors.deepPurple,
+                      ),
                     ),
                     const Text('TCP'),
                     Radio<String>(
@@ -303,6 +336,9 @@ class _MainWidgetState extends State<MainWidget> {
                           _selectedProtocol = protocol!;
                         });
                       },
+                      fillColor: MaterialStateProperty.all<Color>(
+                        Colors.deepPurple,
+                      ),
                     ),
                     const Text('UDP'),
                   ],
@@ -323,15 +359,22 @@ class _MainWidgetState extends State<MainWidget> {
                             protocol: _selectedProtocol,
                           );
 
-                          _frpcProvider.copyToClipboard(config);
+                          await _frpcProvider.copyToClipboard(
+                              config: config, context: context);
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                            content: Text('Copied to clipboard'),
+                            duration: Duration(seconds: 1),
+                          ));
                         },
                         child: const Text('Copy from clipboard'),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () async {
-                          final config =
-                              await _frpcProvider.getConfigFromClipBoard();
+                          final config = await _frpcProvider
+                              .getConfigFromClipBoard(context);
                           if (config != null) {
                             _serverAddressController.text =
                                 config.serverAddress;
@@ -344,6 +387,12 @@ class _MainWidgetState extends State<MainWidget> {
                             setState(() {
                               _selectedProtocol = config.protocol;
                             });
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text('Pasted config'),
+                              duration: Duration(seconds: 1),
+                            ));
                           }
                         },
                         child: const Text('Paste to clipboard'),

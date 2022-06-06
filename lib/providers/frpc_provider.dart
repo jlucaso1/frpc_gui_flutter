@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -83,15 +82,17 @@ class FrpcProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void copyToClipboard(FrpcConfig config) {
-    Clipboard.setData(ClipboardData(text: jsonEncode(config.toJson())));
+  Future<void> copyToClipboard(
+      {required FrpcConfig config, required BuildContext context}) async {
+    return Clipboard.setData(ClipboardData(text: jsonEncode(config.toJson())));
   }
 
-  Future<FrpcConfig?> getConfigFromClipBoard() async {
+  Future<FrpcConfig?> getConfigFromClipBoard(BuildContext context) async {
     final data = await Clipboard.getData('text/plain');
-    if (data == null) return null;
+    if (data == null) throw "Failed to parse clipboard";
     final json = jsonDecode(data.text.toString());
+    final config = FrpcConfig.fromJson(json);
 
-    return FrpcConfig.fromJson(json);
+    return config;
   }
 }
