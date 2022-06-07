@@ -11,37 +11,33 @@ class FrpcProvider extends ChangeNotifier {
 
   bool get isRunning => frpcProcess != null;
 
+  bool isLoading = false;
+
   void start({
-    required String serverAddress,
-    required int serverPort,
-    required int localPort,
-    required int remotePort,
-    required String protocol,
+    required FrpcConfig config,
     required BuildContext context,
   }) async {
     if (frpcProcess != null) return;
+    isLoading = true;
+    notifyListeners();
     var tempProcess = await Process.start('frpc.exe', [
-      protocol,
+      config.protocol,
       '-s',
-      '$serverAddress:$serverPort',
+      '${config.serverAddress}:${config.serverPort}',
       '-l',
-      '$localPort',
+      '${config.localPort}',
       '-r',
-      '$remotePort',
+      '${config.remotePort}',
     ]);
     tempProcess.stdout.transform(utf8.decoder).listen((data) async {
       // debugPrint(data);
       if (data.contains('start proxy success')) {
         frpcProcess = tempProcess;
         // debugPrint('started frpc.exe process, pid: ${tempProcess.pid}');
+        saveConfig(config: config);
+        isLoading = false;
         notifyListeners();
-        final prefs = await SharedPreferences.getInstance();
-
-        prefs.setString('serverAddress', serverAddress);
-        prefs.setInt('serverPort', serverPort);
-        prefs.setInt('localPort', localPort);
-        prefs.setInt('remotePort', remotePort);
-        prefs.setString('protocol', protocol);
+        return;
       }
       if (data.contains('port already used')) {
         // debugPrint('port already used');
@@ -71,6 +67,8 @@ class FrpcProvider extends ChangeNotifier {
             ],
           ),
         );
+        isLoading = false;
+        notifyListeners();
       }
     });
   }
@@ -79,6 +77,7 @@ class FrpcProvider extends ChangeNotifier {
     if (frpcProcess == null) return;
     frpcProcess?.kill();
     frpcProcess = null;
+    isLoading = false;
     notifyListeners();
   }
 
@@ -94,5 +93,15 @@ class FrpcProvider extends ChangeNotifier {
     final config = FrpcConfig.fromJson(json);
 
     return config;
+  }
+
+  Future<void> saveConfig({required FrpcConfig config}) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    prefs.setString('serverAddress', config.serverAddress);
+    prefs.setInt('serverPort', config.serverPort);
+    prefs.setInt('localPort', config.localPort);
+    prefs.setInt('remotePort', config.remotePort);
+    prefs.setString('protocol', config.protocol);
   }
 }

@@ -115,39 +115,13 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    WidgetsBinding.instance.removeObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      debugPrint("App resumed");
-    }
-    if (state == AppLifecycleState.paused) {
-      debugPrint("App paused");
-    }
-    if (state == AppLifecycleState.inactive) {
-      debugPrint("App inactive");
-    }
-  }
-
+class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Material(
         child: WindowBorder(
       color: Colors.deepPurple,
-      width: 1,
+      width: 4,
       child: Column(
         children: [
           WindowTitleBarBox(
@@ -180,17 +154,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 }
 
 final buttonColors = WindowButtonColors(
-    iconNormal: const Color(0xFF805306),
-    mouseOver: const Color(0xFFF6A00C),
-    mouseDown: const Color(0xFF805306),
-    iconMouseOver: const Color(0xFF805306),
-    iconMouseDown: const Color(0xFFFFD500));
+  iconNormal: Colors.white,
+  mouseOver: const Color(0xFFF6A00C),
+  mouseDown: const Color(0xFF805306),
+  iconMouseOver: Colors.white,
+  iconMouseDown: const Color(
+    0xFFFFD500,
+  ),
+);
 
 final closeButtonColors = WindowButtonColors(
-    mouseOver: const Color(0xFFD32F2F),
-    mouseDown: const Color(0xFFB71C1C),
-    iconNormal: const Color(0xFF805306),
-    iconMouseOver: Colors.white);
+  mouseOver: const Color(0xFFD32F2F),
+  mouseDown: const Color(0xFFB71C1C),
+  iconNormal: Colors.white,
+  iconMouseOver: Colors.white,
+);
 
 class WindowButtons extends StatefulWidget {
   const WindowButtons({Key? key}) : super(key: key);
@@ -348,6 +326,7 @@ class _MainWidgetState extends State<MainWidget> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
+                      const Text('Clipboard: '),
                       ElevatedButton(
                         onPressed: () async {
                           // create a FrpcConfig object
@@ -368,7 +347,7 @@ class _MainWidgetState extends State<MainWidget> {
                             duration: Duration(seconds: 1),
                           ));
                         },
-                        child: const Text('Copy from clipboard'),
+                        child: const Text('Copy'),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
@@ -395,7 +374,7 @@ class _MainWidgetState extends State<MainWidget> {
                             ));
                           }
                         },
-                        child: const Text('Paste to clipboard'),
+                        child: const Text('Paste'),
                       ),
                     ],
                   ),
@@ -404,25 +383,38 @@ class _MainWidgetState extends State<MainWidget> {
             ),
           ),
           // put button to the bottom
-          const SizedBox(height: 20),
+          const SizedBox(height: 15),
           Consumer<FrpcProvider>(builder: (context, provider, child) {
             var isRunning = provider.isRunning;
+            var isLoading = provider.isLoading;
             return ElevatedButton(
               style: ElevatedButton.styleFrom(
                   fixedSize: const Size(70, 30),
-                  primary: isRunning ? Colors.red : Colors.green),
+                  primary: isLoading
+                      ? Colors.yellow
+                      : isRunning
+                          ? Colors.red
+                          : Colors.green),
               onPressed: provider.isRunning
                   ? () => _frpcProvider.stop()
                   : () => _frpcProvider.start(
-                      serverAddress: _serverAddressController.text,
-                      serverPort: int.parse(_serverPortController.text),
-                      localPort: int.parse(_localPortController.text),
-                      remotePort: int.parse(_remotePortController.text),
-                      protocol: _selectedProtocol,
+                      config: FrpcConfig(
+                        serverAddress: _serverAddressController.text,
+                        serverPort: int.parse(_serverPortController.text),
+                        localPort: int.parse(_localPortController.text),
+                        remotePort: int.parse(_remotePortController.text),
+                        protocol: _selectedProtocol,
+                      ),
                       context: context),
-              child: Text(
-                isRunning ? 'Stop' : 'Start',
-              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(),
+                    )
+                  : Text(
+                      isRunning ? 'Stop' : 'Start',
+                    ),
             );
           }),
         ],
