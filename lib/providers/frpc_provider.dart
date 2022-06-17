@@ -20,7 +20,7 @@ class FrpcProvider extends ChangeNotifier {
     if (frpcProcess != null) return;
     isLoading = true;
     notifyListeners();
-    var tempProcess = await Process.start('frpc.exe', [
+    var tempProcess = await Process.start('frp/frpc.exe', [
       config.protocol,
       '-s',
       '${config.serverAddress}:${config.serverPort}',
