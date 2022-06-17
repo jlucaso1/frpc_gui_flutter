@@ -2,6 +2,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final buttonColors = WindowButtonColors(
   iconNormal: Colors.white,
@@ -40,14 +41,39 @@ class _WindowControlsState extends State<WindowControls> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        MinimizeWindowButton(colors: buttonColors, onPressed: appWindow.hide),
-        // MaximizeWindowButton(colors: buttonColors),
-        CloseWindowButton(
-          colors: closeButtonColors,
+        // github image assets\images\github.png
+        TextButton(
           onPressed: () {
-            _frpcProvider.stop();
-            appWindow.close();
+            launchUrl(
+                Uri.parse("https://github.com/jlucaso1/frpc_gui_flutter"));
           },
+          child: Tooltip(
+            message: "Made with ❤️ by jlucaso1",
+            child: Image.asset(
+              'assets/images/github.png',
+              width: appWindow.titleBarButtonSize.width,
+              height: appWindow.titleBarButtonSize.height,
+            ),
+          ),
+          // tooltip
+          //
+        ),
+        Tooltip(
+            message: "Hide to tray",
+            child: MinimizeWindowButton(
+              colors: buttonColors,
+              onPressed: appWindow.hide,
+            )),
+        // MaximizeWindowButton(colors: buttonColors),
+        Tooltip(
+          message: "Maximize",
+          child: CloseWindowButton(
+            colors: closeButtonColors,
+            onPressed: () {
+              _frpcProvider.stop();
+              appWindow.close();
+            },
+          ),
         ),
       ],
     );
