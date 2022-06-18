@@ -1,6 +1,7 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:frpc_gui_flutter/controllers/frpc_controller.dart';
+import 'package:frpc_gui_flutter/services/tray_service.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -31,6 +32,7 @@ class WindowControls extends StatefulWidget {
 class _WindowControlsState extends State<WindowControls> {
   final FrpcController _frpcController =
       Get.put<FrpcController>(FrpcController());
+  final TrayService _trayService = Get.put<TrayService>(TrayService());
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,7 @@ class _WindowControlsState extends State<WindowControls> {
             colors: closeButtonColors,
             onPressed: () {
               _frpcController.stop();
+              _trayService.onClose();
               appWindow.close();
             },
           ),
