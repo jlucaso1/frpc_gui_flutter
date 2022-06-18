@@ -1,7 +1,7 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
-import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:frpc_gui_flutter/controllers/frpc_controller.dart';
+import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final buttonColors = WindowButtonColors(
@@ -29,13 +29,8 @@ class WindowControls extends StatefulWidget {
 }
 
 class _WindowControlsState extends State<WindowControls> {
-  late FrpcProvider _frpcProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    _frpcProvider = Provider.of<FrpcProvider>(context, listen: false);
-  }
+  final FrpcController _frpcController =
+      Get.put<FrpcController>(FrpcController());
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +61,11 @@ class _WindowControlsState extends State<WindowControls> {
             )),
         // MaximizeWindowButton(colors: buttonColors),
         Tooltip(
-          message: "Maximize",
+          message: "Close",
           child: CloseWindowButton(
             colors: closeButtonColors,
             onPressed: () {
-              _frpcProvider.stop();
+              _frpcController.stop();
               appWindow.close();
             },
           ),

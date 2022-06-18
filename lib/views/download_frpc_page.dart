@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frpc_gui_flutter/layouts/main_layout.dart';
 import 'package:frpc_gui_flutter/utils/frp_utils.dart';
+import 'package:get/get.dart';
 
 class DownloadFrpcPage extends StatefulWidget {
   const DownloadFrpcPage({Key? key}) : super(key: key);
@@ -37,7 +38,7 @@ class _DownloadFrpcPageState extends State<DownloadFrpcPage> {
               try {
                 await downloadFrpc();
                 if (!mounted) return;
-                Navigator.pushReplacementNamed(context, '/home');
+                Get.toNamed('/home');
               } catch (e) {
                 showDialog(
                   context: context,

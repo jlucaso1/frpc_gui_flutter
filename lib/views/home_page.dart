@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frpc_gui_flutter/controllers/frpc_controller.dart';
 import 'package:frpc_gui_flutter/layouts/main_layout.dart';
 import 'package:frpc_gui_flutter/models/config.dart';
-import 'package:frpc_gui_flutter/providers/frpc_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,12 +20,11 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _remotePortController = TextEditingController();
   String _selectedProtocol = 'tcp';
 
-  late FrpcProvider _frpcProvider;
+  final FrpcController _frpcController = Get.find<FrpcController>();
 
   @override
   void initState() {
     super.initState();
-    _frpcProvider = Provider.of<FrpcProvider>(context, listen: false);
     _loadPrefs();
   }
 
@@ -140,8 +139,8 @@ class _HomePageState extends State<HomePage> {
                               protocol: _selectedProtocol,
                             );
 
-                            await _frpcProvider.copyToClipboard(
-                                config: config, context: context);
+                            await _frpcController.copyToClipboard(
+                                config: config);
                             if (!mounted) return;
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(
@@ -154,8 +153,8 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () async {
-                            final config = await _frpcProvider
-                                .getConfigFromClipBoard(context);
+                            final config =
+                                await _frpcController.getConfigFromClipBoard();
                             if (config != null) {
                               _serverAddressController.text =
                                   config.serverAddress;
@@ -186,39 +185,41 @@ class _HomePageState extends State<HomePage> {
             ),
             // put button to the bottom
             const SizedBox(height: 15),
-            Consumer<FrpcProvider>(builder: (context, provider, child) {
-              var isRunning = provider.isRunning;
-              var isLoading = provider.isLoading;
-              return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    fixedSize: const Size(70, 30),
-                    primary: isLoading
-                        ? Colors.yellow
-                        : isRunning
-                            ? Colors.red
-                            : Colors.green),
-                onPressed: provider.isRunning
-                    ? () => _frpcProvider.stop()
-                    : () => _frpcProvider.start(
-                        config: FrpcConfig(
-                          serverAddress: _serverAddressController.text,
-                          serverPort: int.parse(_serverPortController.text),
-                          localPort: int.parse(_localPortController.text),
-                          remotePort: int.parse(_remotePortController.text),
-                          protocol: _selectedProtocol,
+            Obx(
+              () {
+                var isLoading = _frpcController.isLoading.value;
+                var isRunning = _frpcController.isRunning.value;
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(70, 30),
+                      primary: isLoading
+                          ? Colors.yellow
+                          : isRunning
+                              ? Colors.red
+                              : Colors.green),
+                  onPressed: isRunning
+                      ? () => _frpcController.stop()
+                      : () => _frpcController.start(
+                            config: FrpcConfig(
+                              serverAddress: _serverAddressController.text,
+                              serverPort: int.parse(_serverPortController.text),
+                              localPort: int.parse(_localPortController.text),
+                              remotePort: int.parse(_remotePortController.text),
+                              protocol: _selectedProtocol,
+                            ),
+                          ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(),
+                        )
+                      : Text(
+                          isRunning ? 'Stop' : 'Start',
                         ),
-                        context: context),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(),
-                      )
-                    : Text(
-                        isRunning ? 'Stop' : 'Start',
-                      ),
-              );
-            }),
+                );
+              },
+            ),
           ],
         ),
       ),
