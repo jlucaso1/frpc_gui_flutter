@@ -10,7 +10,7 @@ jobs:
           cache: true
       - run: flutter config --enable-windows-desktop
       - run: flutter build windows --release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: release
           path: build/windows/runner/Release
