@@ -59,7 +59,10 @@ class _WindowControlsState extends State<WindowControls> {
             message: "Hide to tray",
             child: MinimizeWindowButton(
               colors: buttonColors,
-              onPressed: appWindow.hide,
+              onPressed: () {
+                appWindow.hide();
+                _trayService.addShowMenuItem();
+              },
             )),
         // MaximizeWindowButton(colors: buttonColors),
         Tooltip(
