@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frpc_gui_flutter/layouts/main_layout.dart';
+import 'package:frpc_gui_flutter/utils/constants.dart';
 import 'package:frpc_gui_flutter/utils/frp_utils.dart';
 import 'package:get/get.dart';
 
@@ -14,8 +15,7 @@ class _DownloadFrpcPageState extends State<DownloadFrpcPage> {
   bool loading = false;
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
-        child: Center(
+    var mainWidget = Center(
       // oops, apparently you don't have frpc.exe in your project
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -64,6 +64,10 @@ class _DownloadFrpcPageState extends State<DownloadFrpcPage> {
           ),
         ],
       ),
-    ));
+    );
+    if (!isMobile) {
+      return MainLayout(child: mainWidget);
+    }
+    return Material(child: mainWidget);
   }
 }

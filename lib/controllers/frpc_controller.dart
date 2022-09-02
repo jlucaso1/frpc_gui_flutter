@@ -18,7 +18,7 @@ class FrpcController extends GetxController {
   }) async {
     if (frpcProcess.value != null) return;
     isLoading.value = true;
-    var tempProcess = await Process.start(frpcPath, [
+    var tempProcess = await Process.start(await frpcPath, [
       config.protocol,
       '-s',
       '${config.serverAddress}:${config.serverPort}',

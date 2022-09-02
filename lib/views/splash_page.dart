@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frpc_gui_flutter/layouts/main_layout.dart';
+import 'package:frpc_gui_flutter/utils/constants.dart';
 import 'package:frpc_gui_flutter/utils/frp_utils.dart';
 import 'package:get/get.dart';
 
@@ -14,8 +15,8 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      var exists = checkIfFrpcExists();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      var exists = await checkIfFrpcExists();
       if (exists) {
         Get.toNamed('/home');
       } else {
@@ -26,8 +27,7 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
-        child: Center(
+    var mainWidget = Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
@@ -36,6 +36,12 @@ class _SplashPageState extends State<SplashPage> {
           CircularProgressIndicator(),
         ],
       ),
-    ));
+    );
+    if (!isMobile) {
+      return MainLayout(child: mainWidget);
+    }
+    return Material(
+      child: mainWidget,
+    );
   }
 }
