@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frpc_gui_flutter/models/config.dart';
+import 'package:frpc_gui_flutter/utils/constants.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,7 +18,7 @@ class FrpcController extends GetxController {
   }) async {
     if (frpcProcess.value != null) return;
     isLoading.value = true;
-    var tempProcess = await Process.start('frp/frpc.exe', [
+    var tempProcess = await Process.start(frpcPath, [
       config.protocol,
       '-s',
       '${config.serverAddress}:${config.serverPort}',
@@ -54,7 +55,9 @@ class FrpcController extends GetxController {
               child: const Text('Kill All'),
               onPressed: () async {
                 // kill all processes frpc.exe
-                Process.run('taskkill', ['/f', '/im', 'frpc.exe']);
+                Platform.isWindows
+                    ? Process.run('taskkill', ['/f', '/im', 'frpc.exe'])
+                    : Process.run('killall', ['frpc']);
                 Get.back();
               },
             ),

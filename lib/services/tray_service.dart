@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:frpc_gui_flutter/controllers/frpc_controller.dart';
 import 'package:get/get.dart';
@@ -22,7 +24,10 @@ class TrayService extends GetxService with TrayListener {
   void _initTray() async {
     await trayManager.setIcon('assets/images/app_icon.ico');
     await trayManager.setContextMenu(_menu);
-    await trayManager.setToolTip('Frpc GUI');
+    await trayManager.setTitle('Frpc GUI');
+    if (!Platform.isLinux) {
+      await trayManager.setToolTip('Frpc GUI');
+    }
   }
 
   @override
@@ -48,11 +53,27 @@ class TrayService extends GetxService with TrayListener {
   @override
   void onTrayIconRightMouseUp() {}
 
+  void addShowMenuItem() {
+    _menu.items?.add(
+      MenuItem(
+        key: 'show_app',
+        label: 'Show App',
+      ),
+    );
+    trayManager.setContextMenu(_menu);
+  }
+
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
     if (menuItem.key == 'exit_app') {
       appWindow.close();
       _frpcController.stop();
+    }
+    if (menuItem.key == 'show_app') {
+      appWindow.show();
+      // remove tray icon with key 'show_app'
+      _menu.items?.removeWhere((element) => element.key == 'show_app');
+      trayManager.setContextMenu(_menu);
     }
   }
 }

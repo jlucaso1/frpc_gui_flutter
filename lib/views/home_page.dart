@@ -141,12 +141,7 @@ class _HomePageState extends State<HomePage> {
 
                             await _frpcController.copyToClipboard(
                                 config: config);
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text('Copied to clipboard'),
-                              duration: Duration(seconds: 1),
-                            ));
+                            Get.snackbar('Copied to clipboard', 'Success');
                           },
                           child: const Text('Copy'),
                         ),
@@ -168,11 +163,7 @@ class _HomePageState extends State<HomePage> {
                                 _selectedProtocol = config.protocol;
                               });
                               if (!mounted) return;
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                content: Text('Pasted config'),
-                                duration: Duration(seconds: 1),
-                              ));
+                              Get.snackbar('Pasted from clipboard', 'Success');
                             }
                           },
                           child: const Text('Paste'),
@@ -192,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                 return ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       fixedSize: const Size(70, 30),
-                      primary: isLoading
+                      backgroundColor: isLoading
                           ? Colors.yellow
                           : isRunning
                               ? Colors.red
