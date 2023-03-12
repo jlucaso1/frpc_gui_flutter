@@ -13,7 +13,7 @@ void main() async {
     win.maxSize = minSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
-    win.title = "Frpc GUI";
+    win.title = "Frpc GUI - By jlucaso";
     win.show();
   });
 }
