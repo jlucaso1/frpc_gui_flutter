@@ -24,7 +24,6 @@ class TrayService extends GetxService with TrayListener {
   void _initTray() async {
     await trayManager.setIcon('assets/images/app_icon.ico');
     await trayManager.setContextMenu(_menu);
-    await trayManager.setTitle('Frpc GUI');
     if (!Platform.isLinux) {
       await trayManager.setToolTip('Frpc GUI');
     }
